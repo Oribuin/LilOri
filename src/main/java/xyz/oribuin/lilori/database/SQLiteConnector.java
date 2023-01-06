@@ -14,8 +14,8 @@ public class SQLiteConnector implements DatabaseConnector {
     private final Object lock;
 
 
-    public SQLiteConnector() {
-        this.connectionString = "jdbc:sqlite:" + new File("database.db").getAbsolutePath();
+    public SQLiteConnector(File file) {
+        this.connectionString = "jdbc:sqlite:" + file.getAbsolutePath();
         this.openConnections = new AtomicInteger();
         this.lock = new Object();
 

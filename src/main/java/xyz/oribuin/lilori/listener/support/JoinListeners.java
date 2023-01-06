@@ -7,16 +7,15 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
+import xyz.oribuin.lilori.util.Constants;
 
 import java.awt.*;
 
 public class JoinListeners extends ListenerAdapter {
 
-    private final String GUILD_ID = "731659405958971413"; // Ori Support Server ID
-
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
-        if (!event.getGuild().getId().equals(GUILD_ID))
+        if (!event.getGuild().getId().equals(Constants.SUPPORT_SERVER.getValue()))
             return;
 
         TextChannel channel = event.getGuild().getTextChannelById("733059354328170629"); // #join-logs channel
@@ -34,7 +33,7 @@ public class JoinListeners extends ListenerAdapter {
 
     @Override
     public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
-        if (event.getGuild().getId().equals(GUILD_ID))
+        if (!event.getGuild().getId().equals(Constants.SUPPORT_SERVER.getValue()))
             return;
 
         TextChannel channel = event.getGuild().getTextChannelById("733059354328170629"); // #join-logs channel
@@ -46,6 +45,8 @@ public class JoinListeners extends ListenerAdapter {
                 .setDescription("ID: [" + event.getUser().getId() + "]")
                 .setColor(Color.decode("#f75454"))
                 .build();
+
+        channel.sendMessageEmbeds(embed).queue();
     }
 
 }

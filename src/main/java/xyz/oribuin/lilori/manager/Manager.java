@@ -15,9 +15,4 @@ public abstract class Manager {
      */
     public abstract void enable();
 
-    /**
-     * Unloads the Manager's Settings
-     */
-    public abstract void disable();
-
 }

@@ -5,19 +5,19 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import xyz.oribuin.lilori.listener.support.FAQListeners;
+import xyz.oribuin.lilori.listener.support.JoinListeners;
+import xyz.oribuin.lilori.manager.DataManager;
 import xyz.oribuin.lilori.manager.Manager;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LilOri extends ListenerAdapter {
 
-    private final Map<Class<? extends Manager>, Manager> managers = new HashMap<>();
+    private final Map<Class<? extends Manager>, Manager> managers = new LinkedHashMap<>();
 
     private static LilOri instance;
     private JDA jdaInstance;
@@ -44,6 +44,9 @@ public class LilOri extends ListenerAdapter {
 
         instance = this;
 
+        // Load Managers
+        this.getManager(DataManager.class);
+
         JDABuilder builder = JDABuilder.createDefault(token, List.of(
                 GatewayIntent.GUILD_MEMBERS,
                 GatewayIntent.GUILD_WEBHOOKS,
@@ -56,8 +59,19 @@ public class LilOri extends ListenerAdapter {
                 GatewayIntent.MESSAGE_CONTENT
         ));
 
+        builder.addEventListeners(this,
+
+                // Support Server Listeners
+                new FAQListeners(this),
+                new JoinListeners()
+
+                // Regular Listeners
+        );
+
         builder.setEnabledIntents(Arrays.asList(GatewayIntent.values()));
         this.jdaInstance = builder.build();
+
+
     }
 
     /**
@@ -71,8 +85,34 @@ public class LilOri extends ListenerAdapter {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public final <T extends Manager> T getManager(Class<T> managerClass) {
+        if (this.managers.containsKey(managerClass))
+            return (T) this.managers.get(managerClass);
+
+        try {
+            T manager = managerClass.getConstructor(LilOri.class).newInstance(this);
+            this.managers.put(managerClass, manager);
+            manager.enable();
+            return manager;
+        } catch (Exception ex) {
+            throw new ManagerNotFoundException(managerClass, ex);
+        }
+    }
+
     public JDA getJDAInstance() {
         return jdaInstance;
+    }
+
+    /**
+     * An exception thrown when a Manager fails to load
+     */
+    private static class ManagerNotFoundException extends RuntimeException {
+
+        public ManagerNotFoundException(Class<? extends Manager> managerClass, Throwable cause) {
+            super("Failed to load " + managerClass.getSimpleName(), cause);
+        }
+
     }
 
 }
