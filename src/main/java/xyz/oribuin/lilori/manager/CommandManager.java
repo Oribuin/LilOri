@@ -4,8 +4,9 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.jetbrains.annotations.NotNull;
-import org.reflections.Reflections;
 import xyz.oribuin.lilori.LilOri;
+import xyz.oribuin.lilori.command.ArchiveCommand;
+import xyz.oribuin.lilori.command.TicketMessageCommand;
 import xyz.oribuin.lilori.handler.BotCommand;
 import xyz.oribuin.lilori.handler.CommandType;
 import xyz.oribuin.lilori.handler.OptionBuilder;
@@ -32,22 +33,12 @@ public class CommandManager extends Manager {
     public void loadCommands() {
         this.commands.clear();
 
-        // Use reflection to find all commands and register them.
-        Reflections reflections = new Reflections("xyz.oribuin.lilori.command");
-        reflections.getSubTypesOf(BotCommand.class).forEach(clazz -> {
-            try {
-                BotCommand command = clazz.getDeclaredConstructor().newInstance();
-                this.commands.put(command.getName(), command);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        // Register all commands
+//        this.commands.put("archive", new ArchiveCommand());
+//        this.commands.put("ticketmessage", new TicketMessageCommand());
 
-        if (this.commands.isEmpty())
-            System.out.println("No commands were found.");
-        else
-            System.out.println("Loaded " + this.commands.size() + " commands.");
 
+        System.out.println("Loaded " + this.commands.size() + " commands. Registering them now.");
 
         // Register non legacy commands.
         final List<Guild> guilds = this.bot.getJDAInstance().getGuilds();

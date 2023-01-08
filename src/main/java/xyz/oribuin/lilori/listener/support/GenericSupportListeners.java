@@ -11,7 +11,7 @@ import xyz.oribuin.lilori.util.Constants;
 
 import java.awt.*;
 
-public class JoinListeners extends ListenerAdapter {
+public class GenericSupportListeners extends ListenerAdapter {
 
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {

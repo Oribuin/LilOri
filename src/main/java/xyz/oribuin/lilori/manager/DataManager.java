@@ -10,10 +10,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class DataManager extends Manager {
 
     private final Map<String, String> faqMap = new HashMap<>();
+    private final Map<Integer, String> archiveMap = new HashMap<>();
     private DatabaseConnector connector;
 
     public DataManager(LilOri bot) {
@@ -52,6 +54,12 @@ public class DataManager extends Manager {
             try (PreparedStatement statement = connection.prepareStatement(createFaqs)) {
                 statement.executeUpdate();
             }
+
+            // auto incrementing id for the archive logs with file name as the primary key
+            String createArchiveLogs = "CREATE TABLE IF NOT EXISTS lilori_archive_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, file_name TEXT);";
+            try (PreparedStatement statement = connection.prepareStatement(createArchiveLogs)) {
+                statement.executeUpdate();
+            }
         });
     }
 
@@ -65,6 +73,15 @@ public class DataManager extends Manager {
                 ResultSet result = statement.executeQuery();
                 while (result.next()) {
                     this.faqMap.put(result.getString("id"), result.getString("answer"));
+                }
+            }
+
+            // load archive logs
+            String loadArchiveLogs = "SELECT * FROM lilori_archive_logs;";
+            try (PreparedStatement statement = connection.prepareStatement(loadArchiveLogs)) {
+                ResultSet result = statement.executeQuery();
+                while (result.next()) {
+                    this.archiveMap.put(result.getInt("id"),result.getString("file_name"));
                 }
             }
         });
@@ -102,8 +119,35 @@ public class DataManager extends Manager {
         });
     }
 
+    /**
+     * Save the archive log to the database, returns the id of the log
+     *
+     * @param fileName The file name of the archive log
+     */
+    public void createArchiveLog(String fileName, Consumer<Integer> callback) {
+        this.connector.connect(connection -> {
+            String createArchiveLog = "INSERT INTO lilori_archive_logs (file_name) VALUES (?);";
+            try (PreparedStatement statement = connection.prepareStatement(createArchiveLog)) {
+                statement.setString(1, fileName);
+                statement.executeUpdate();
+
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        int id = generatedKeys.getInt(1);
+                        this.archiveMap.put(id, fileName);
+                        callback.accept(id);
+                    }
+                }
+            }
+        });
+    }
+
     public Map<String, String> getFaqMap() {
         return faqMap;
+    }
+
+    public Map<Integer, String> getArchiveMap() {
+        return archiveMap;
     }
 
 }

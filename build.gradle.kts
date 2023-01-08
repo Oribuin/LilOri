@@ -32,6 +32,7 @@ dependencies {
     implementation("org.apache.commons:commons-lang3:3.12.0")
     implementation("org.reflections:reflections:0.10.2")
     implementation("com.google.code.gson:gson:2.10")
+    implementation("com.google.guava:guava:31.1-jre")
 
     // SQL Libraries
     implementation("com.zaxxer:HikariCP:5.0.1")

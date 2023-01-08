@@ -2,18 +2,15 @@ package xyz.oribuin.lilori;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jetbrains.annotations.NotNull;
 import xyz.oribuin.lilori.handler.CommandExecutor;
 import xyz.oribuin.lilori.listener.support.FAQListeners;
-import xyz.oribuin.lilori.listener.support.JoinListeners;
-import xyz.oribuin.lilori.manager.CommandManager;
-import xyz.oribuin.lilori.manager.DataManager;
-import xyz.oribuin.lilori.manager.Manager;
-import xyz.oribuin.lilori.manager.TicketManager;
+import xyz.oribuin.lilori.listener.support.GenericSupportListeners;
+import xyz.oribuin.lilori.listener.support.TicketListeners;
+import xyz.oribuin.lilori.manager.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,7 +63,8 @@ public class LilOri extends ListenerAdapter {
         builder.addEventListeners(this,
                 // Support Server Listeners
                 new FAQListeners(this), // FAQ System
-                new JoinListeners(), // Join/Leave Logs
+                new GenericSupportListeners(), // Generic Support Listeners
+                new TicketListeners(), // Ticket System
 
                 // Command Handler
                 new CommandExecutor(this)

@@ -3,6 +3,7 @@ package xyz.oribuin.lilori.handler;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import javax.management.relation.Role;
 import java.util.List;
 
 public interface BotCommand {
@@ -51,8 +52,8 @@ public interface BotCommand {
     /**
      * @return The command permission.
      */
-    @Nullable
-    Long getRequiredRole();
+    @NotNull
+    List<Long> getRequiredRoles();
 
     /**
      * @return The command guild.

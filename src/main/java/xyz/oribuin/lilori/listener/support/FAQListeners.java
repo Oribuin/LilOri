@@ -43,7 +43,7 @@ public class FAQListeners extends ListenerAdapter {
                         .setAuthor("Found FAQ for: " + key)
                         .setDescription(answer)
                         .setFooter("Requested by: " + event.getAuthor().getAsTag())
-                        .setColor(Color.decode(Constants.DEFAULT_COLOR.getValue()))
+                        .setColor(Color.decode(Constants.DEFAULT_COLOR.getString()))
                         .build()
         ).queue();
     }

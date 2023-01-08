@@ -1,11 +1,18 @@
 package xyz.oribuin.lilori.manager;
 
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.entities.sticker.Sticker;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import org.apache.commons.lang3.StringUtils;
 import xyz.oribuin.lilori.LilOri;
+import xyz.oribuin.lilori.ticket.Ticket;
+import xyz.oribuin.lilori.util.Constants;
 
 import java.awt.*;
 import java.io.File;
@@ -13,11 +20,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class TicketManager extends Manager {
+
+    private final Map<Integer, File> ticketFiles = new HashMap<>();
 
     public TicketManager(LilOri bot) {
         super(bot);
@@ -25,7 +34,93 @@ public class TicketManager extends Manager {
 
     @Override
     public void enable() {
+        this.bot.getManager(DataManager.class).getArchiveMap()
+                .forEach((integer, s) -> this.ticketFiles.put(integer, new File("/archives/" + s)));
+    }
 
+    public TextChannel createTicket(Ticket ticket) {
+        Guild guild = this.bot.getJDAInstance().getGuildById(Constants.SUPPORT_SERVER.getString());
+        if (guild == null)
+            return null;
+
+        Role supportRole = guild.getRoleById(Constants.SUPPORT_ROLE.getString());
+        if (supportRole == null)
+            return null;
+
+        TextChannel channel = guild.createTextChannel(ticket.getOwner().getUser().getName() + "-ticket")
+                .setTopic("\uD83C\uDFAB Welcome to your ticket channel, Our staff will be here shortly.")
+                .setParent(guild.getCategoryById("733086484470694018"))
+                .addRolePermissionOverride(supportRole.getIdLong(), List.of(Permission.VIEW_CHANNEL), List.of())
+                .addMemberPermissionOverride(ticket.getOwner().getIdLong(), List.of(Permission.VIEW_CHANNEL), List.of())
+                .addRolePermissionOverride(Constants.MEMBER_ROLE.getLong(), List.of(), List.of(Permission.VIEW_CHANNEL))
+                .complete();
+
+        final StringBuilder builder = new StringBuilder("Please wait while we get a staff member to help you.\n\n");
+        builder.append("**Ticket Information**\n");
+        builder.append("| **Owner**: ").append(ticket.getOwner().getAsMention()).append("\n");
+        builder.append("| **Subject**: ").append(ticket.getSubject()).append("\n");
+        builder.append("| **Created**: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.ENGLISH))).append("\n");
+
+        if (ticket.getPlugin() != null)
+            builder.append("| **Plugin**: ").append(ticket.getPlugin()).append("\n");
+
+        if (ticket.getVersion() != null)
+            builder.append("| **Version**: ").append(ticket.getVersion()).append("\n");
+
+        builder.append("\n");
+        builder.append("If you would like to close this ticket, please press the button below.");
+
+
+        Message message = channel.sendMessage(ticket.getOwner().getAsMention())
+                .addEmbeds(new EmbedBuilder()
+                        .setAuthor("❓ Ticket Type: " + StringUtils.capitalize(ticket.getType().name().toLowerCase()))
+                        .setDescription(builder.toString())
+                        .setColor(Color.decode(Constants.DEFAULT_COLOR.getString()))
+                        .build())
+                .addActionRow(Button.danger("close-ticket", "Close Ticket").withEmoji(Emoji.fromUnicode("\uD83C\uDFAB")))
+                .complete();
+
+        channel.pinMessageById(message.getId()).queue();
+
+        // TODO: Reimplement this when the ticket system is finished to prevent spam pinging RansomNGaming
+//        channel.sendMessage(supportRole.getAsMention()).queue();
+        return channel;
+    }
+
+    /**
+     * Close a ticket channel with the archive option
+     *
+     * @param event The event that triggered the close
+     */
+    public void closeTicket(ButtonInteractionEvent event) {
+        if (!(event.getChannel() instanceof TextChannel textChannel))
+            return;
+
+        Guild guild = this.bot.getJDAInstance().getGuildById(Constants.SUPPORT_SERVER.getString());
+        if (guild == null)
+            return;
+
+        File archive = this.createFileArchive(textChannel);
+        if (archive != null) {
+
+            this.bot.getManager(DataManager.class).createArchiveLog(archive.getName(), integer -> {
+
+                this.ticketFiles.put(integer, archive);
+
+                event.reply("We have archived your ticket and will be closing it shortly. Press the button below within 30 seconds to get a copy of the archive.")
+                        .addActionRow(Button.success("request-archive:" + integer, "Request Archive").withEmoji(Emoji.fromUnicode("📦")))
+                        .queue(hook -> textChannel.delete().queueAfter(30, TimeUnit.SECONDS));
+            });
+
+
+            return;
+        }
+
+        textChannel.delete().queue();
+    }
+
+    public File getArchiveFile(int id) {
+        return this.ticketFiles.get(id);
     }
 
     /**
@@ -66,10 +161,6 @@ public class TicketManager extends Manager {
 
         User lastUser = null;
         for (Message message : messages) {
-
-            // TODO Delete this
-            if (message.getContentRaw().equalsIgnoreCase("archive channel"))
-                continue;
 
             if (lastUser == null || !lastUser.equals(message.getAuthor())) {
                 builder.append("<div style=\"margin-top: 20px; display: flex; align-items: center; margin-bottom: 5px; margin-left: 20px; \">");
@@ -210,7 +301,7 @@ public class TicketManager extends Manager {
             if (!archiveFolder.exists())
                 archiveFolder.mkdir();
 
-            File file = new File(archiveFolder, channel.getName() + ".html");
+            File file = new File(archiveFolder, UUID.randomUUID() + ".html");
             if (!file.exists())
                 file.createNewFile();
 
@@ -225,22 +316,28 @@ public class TicketManager extends Manager {
         return null;
     }
 
+    /**
+     * Formats the markdown to html
+     *
+     * @param text The text to format
+     * @return The formatted text
+     */
     private String markdownFormat(String text) {
         String newText = text;
         // general markdown formatting
         newText = newText.replaceAll("\n", "<br>");
         newText = newText.replaceAll("\\*\\*(.*?)\\*\\*", "<b>$1</b>");
         newText = newText.replaceAll("\\*(.*?)\\*", "<i>$1</i>");
-        newText = newText.replace("\\*\\*\\*(.*?)\\*\\*\\*", "<b><i>$1</i></b>");
-        newText = newText.replaceAll("__", "<u>");
-        newText = newText.replaceAll("~~", "<s>");
+        newText = newText.replaceAll("\\*\\*\\*(.*?)\\*\\*\\*", "<b><i>$1</i></b>");
+        newText = newText.replaceAll("~~(.*?)~~", "<s>$1</s>");
+        newText = newText.replaceAll("__(.*?)__", "<u>$1</u>");
 
         // make links starting with http:// or https:// clickable
         newText = newText.replaceAll("(https?://\\S+)", "<a href=\"$1\" style=\"color: #23a4ee;\">$1</a>");
 
         // Code blocks
-        newText = newText.replace("\\`\\`\\`", "<div style=\"background-color: #2f3136; padding: 5px;\">$1</div>");
-        newText = newText.replace("\\`", "<span style=\"background-color: #2f3136; padding: 5px;\">$1</span>");
+        newText = newText.replaceAll("```(.*?)```", "<div style=\"background-color: #2f3136; padding: 5px;\">$1</div>");
+        newText = newText.replaceAll("`(.*?)```", "<span style=\"background-color: #2f3136; padding: 5px;\">$1</span>");
 
         return newText;
     }
