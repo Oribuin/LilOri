@@ -14,6 +14,7 @@ import xyz.oribuin.lilori.LilOri;
 import xyz.oribuin.lilori.manager.TicketManager;
 import xyz.oribuin.lilori.ticket.Ticket;
 import xyz.oribuin.lilori.ticket.TicketType;
+import xyz.oribuin.lilori.util.Constants;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,6 +30,8 @@ public class TicketListeners extends ListenerAdapter {
 
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+        if (event.getGuild() == null || !event.getGuild().getId().equals(Constants.SUPPORT_SERVER.getValue()))
+            return;
 
         final String id = event.getComponentId();
 
@@ -71,6 +74,9 @@ public class TicketListeners extends ListenerAdapter {
 
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
+        if (!event.getGuild().getId().equals(Constants.SUPPORT_SERVER.getValue()))
+            return;
+
         if (!event.getInteraction().getModalId().startsWith("ticket-modal:"))
             return;
 
