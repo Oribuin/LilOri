@@ -34,7 +34,7 @@ public class FAQListeners extends ListenerAdapter {
 
         String key = message.substring(1).toLowerCase();
 
-        String answer = this.getFaqMap().get(key);
+        String answer = this.dataManager.getFaqMap().get(key);
         if (answer == null)
             return;
 
@@ -46,10 +46,6 @@ public class FAQListeners extends ListenerAdapter {
                         .setColor(Color.decode(Constants.DEFAULT_COLOR.getValue()))
                         .build()
         ).queue();
-    }
-
-    public Map<String, String> getFaqMap() {
-        return this.dataManager.getFaqMap();
     }
 
 }

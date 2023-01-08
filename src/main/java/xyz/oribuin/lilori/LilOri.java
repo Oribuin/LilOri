@@ -9,6 +9,7 @@ import xyz.oribuin.lilori.listener.support.FAQListeners;
 import xyz.oribuin.lilori.listener.support.JoinListeners;
 import xyz.oribuin.lilori.manager.DataManager;
 import xyz.oribuin.lilori.manager.Manager;
+import xyz.oribuin.lilori.manager.TicketManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,10 +43,12 @@ public class LilOri extends ListenerAdapter {
             return;
         }
 
+        // Set the instance of the bot.
         instance = this;
 
-        // Load Managers
+        // Load the managers.
         this.getManager(DataManager.class);
+        this.getManager(TicketManager.class);
 
         JDABuilder builder = JDABuilder.createDefault(token, List.of(
                 GatewayIntent.GUILD_MEMBERS,
@@ -60,18 +63,13 @@ public class LilOri extends ListenerAdapter {
         ));
 
         builder.addEventListeners(this,
-
                 // Support Server Listeners
-                new FAQListeners(this),
-                new JoinListeners()
-
-                // Regular Listeners
+                new FAQListeners(this), // FAQ System
+                new JoinListeners() // Join/Leave Logs
         );
 
         builder.setEnabledIntents(Arrays.asList(GatewayIntent.values()));
         this.jdaInstance = builder.build();
-
-
     }
 
     /**
@@ -85,6 +83,13 @@ public class LilOri extends ListenerAdapter {
         }
     }
 
+    /**
+     * Gets a manager instance
+     *
+     * @param managerClass The class of the manager to get
+     * @param <T> extends Manager
+     * @return A new or existing instance of the given manager class
+     */
     @SuppressWarnings("unchecked")
     public final <T extends Manager> T getManager(Class<T> managerClass) {
         if (this.managers.containsKey(managerClass))

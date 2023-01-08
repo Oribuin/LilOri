@@ -12,6 +12,10 @@ version = "1.0-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_17
 java.targetCompatibility = JavaVersion.VERSION_17
 
+tasks.withType(JavaCompile::class.java) {
+    this.options.encoding = "UTF-8"
+}
+
 repositories {
     mavenCentral()
     gradlePluginPortal()

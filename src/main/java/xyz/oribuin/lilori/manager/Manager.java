@@ -6,7 +6,7 @@ public abstract class Manager {
 
     protected final LilOri bot;
 
-    protected Manager(LilOri bot) {
+    public Manager(LilOri bot) {
         this.bot = bot;
     }
 
