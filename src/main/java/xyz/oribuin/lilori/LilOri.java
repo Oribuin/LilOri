@@ -3,8 +3,10 @@ package xyz.oribuin.lilori;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import org.jetbrains.annotations.NotNull;
 import xyz.oribuin.lilori.handler.CommandExecutor;
 import xyz.oribuin.lilori.listener.support.FAQListeners;
 import xyz.oribuin.lilori.listener.support.JoinListeners;
@@ -48,10 +50,6 @@ public class LilOri extends ListenerAdapter {
         // Set the instance of the bot.
         instance = this;
 
-        // Load the managers.
-        this.getManager(CommandManager.class);
-        this.getManager(DataManager.class);
-        this.getManager(TicketManager.class);
 
         JDABuilder builder = JDABuilder.createDefault(token, List.of(
                 GatewayIntent.GUILD_MEMBERS,
@@ -76,6 +74,18 @@ public class LilOri extends ListenerAdapter {
 
         builder.setEnabledIntents(Arrays.asList(GatewayIntent.values()));
         this.jdaInstance = builder.build();
+
+
+        // Load the managers.
+        this.getManager(CommandManager.class);
+        this.getManager(DataManager.class);
+        this.getManager(TicketManager.class);
+
+    }
+
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        this.getManager(CommandManager.class).loadCommands();
     }
 
     /**

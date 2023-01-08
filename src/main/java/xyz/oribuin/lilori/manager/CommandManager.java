@@ -26,6 +26,10 @@ public class CommandManager extends Manager {
 
     @Override
     public void enable() {
+
+    }
+
+    public void loadCommands() {
         this.commands.clear();
 
         // Use reflection to find all commands and register them.
