@@ -157,6 +157,7 @@ public class TicketManager extends Manager {
 
         // Make sure the tickets are from oldest to newest
         List<Message> messages = new ArrayList<>(action.getRetrievedHistory());
+        messages.add(channel.retrieveMessageById(channel.getLatestMessageId()).complete());
         messages.sort(Comparator.comparing(ISnowflake::getTimeCreated));
 
         User lastUser = null;
