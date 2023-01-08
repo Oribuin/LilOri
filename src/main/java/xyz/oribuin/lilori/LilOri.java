@@ -5,8 +5,10 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import xyz.oribuin.lilori.handler.CommandExecutor;
 import xyz.oribuin.lilori.listener.support.FAQListeners;
 import xyz.oribuin.lilori.listener.support.JoinListeners;
+import xyz.oribuin.lilori.manager.CommandManager;
 import xyz.oribuin.lilori.manager.DataManager;
 import xyz.oribuin.lilori.manager.Manager;
 import xyz.oribuin.lilori.manager.TicketManager;
@@ -47,6 +49,7 @@ public class LilOri extends ListenerAdapter {
         instance = this;
 
         // Load the managers.
+        this.getManager(CommandManager.class);
         this.getManager(DataManager.class);
         this.getManager(TicketManager.class);
 
@@ -65,7 +68,10 @@ public class LilOri extends ListenerAdapter {
         builder.addEventListeners(this,
                 // Support Server Listeners
                 new FAQListeners(this), // FAQ System
-                new JoinListeners() // Join/Leave Logs
+                new JoinListeners(), // Join/Leave Logs
+
+                // Command Handler
+                new CommandExecutor(this)
         );
 
         builder.setEnabledIntents(Arrays.asList(GatewayIntent.values()));
