@@ -38,7 +38,7 @@ public class TicketManager extends Manager {
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MMM/yyyy HH:mm:ss"));
 
         System.out.println(" * Creating archive for " + channel.getName() + "(" + channel.getId() + ") + " + date);
-        MessageHistory action = channel.getHistoryFromBeginning(100).complete();
+        MessageHistory action = channel.getHistoryBefore(channel.getLatestMessageId(), 100).complete();
 
         // Start to build the html file
         StringBuilder builder = new StringBuilder("<!DOCTYPE html>")
@@ -55,7 +55,7 @@ public class TicketManager extends Manager {
 
         // Add a header to the html file
         builder.append("<div style=\"margin-bottom: 40px; background-color: #2f3136; padding: 10px; text-align: center;\">")
-                .append("\uD83E\uDD20 Recreation of the channel <b>").append(channel.getName()).append("</b> created on <b>")
+                .append("Recreation of the channel <b>").append(channel.getName()).append("</b> created on <b>")
                 .append(channel.getTimeCreated().format(DateTimeFormatter.ofPattern("dd/MMM/yyyy HH:mm:ss")))
                 .append("</b>")
                 .append("</div>");
