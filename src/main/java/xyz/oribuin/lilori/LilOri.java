@@ -48,17 +48,7 @@ public class LilOri extends ListenerAdapter {
         instance = this;
 
 
-        JDABuilder builder = JDABuilder.createDefault(token, List.of(
-                GatewayIntent.GUILD_MEMBERS,
-                GatewayIntent.GUILD_WEBHOOKS,
-                GatewayIntent.GUILD_INVITES,
-                GatewayIntent.GUILD_PRESENCES,
-                GatewayIntent.GUILD_MESSAGES,
-                GatewayIntent.GUILD_MESSAGE_REACTIONS,
-                GatewayIntent.DIRECT_MESSAGES,
-                GatewayIntent.DIRECT_MESSAGE_REACTIONS,
-                GatewayIntent.MESSAGE_CONTENT
-        ));
+        JDABuilder builder = JDABuilder.createDefault(token, List.of(GatewayIntent.values()));
 
         builder.addEventListeners(this,
                 // Support Server Listeners

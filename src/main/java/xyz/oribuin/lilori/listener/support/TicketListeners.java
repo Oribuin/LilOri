@@ -1,8 +1,10 @@
 package xyz.oribuin.lilori.listener.support;
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
@@ -17,8 +19,6 @@ import xyz.oribuin.lilori.ticket.TicketType;
 import xyz.oribuin.lilori.util.Constants;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TicketListeners extends ListenerAdapter {
 
@@ -40,7 +40,7 @@ public class TicketListeners extends ListenerAdapter {
             TicketType type = TicketType.valueOf(id.split(":")[1].toUpperCase());
 
             Modal.Builder modal = Modal.create("ticket-modal:" + type.name(), "Create a new ticket")
-                            .addActionRow(TextInput.create("ticket-subject", "Ticket Subject", TextInputStyle.PARAGRAPH).setRequired(true).build());
+                    .addActionRow(TextInput.create("ticket-subject", "Ticket Subject", TextInputStyle.PARAGRAPH).setRequired(true).build());
 
             if (type != TicketType.OTHER) {
                 modal.addActionRow(TextInput.create("ticket-plugin", "Plugin Name", TextInputStyle.SHORT).build());
@@ -105,6 +105,29 @@ public class TicketListeners extends ListenerAdapter {
 
         TextChannel channel = this.manager.createTicket(ticket);
         event.deferReply().setContent("\uD83C\uDFAB Your ticket has been created. You can view it here: " + channel.getAsMention()).setEphemeral(true).queue();
+    }
+
+    @Override
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        // If the message was sent in a ticket channel
+        if (!event.getGuild().getId().equals(Constants.SUPPORT_SERVER.getValue()))
+            return;
+
+        if (!(event.getChannel() instanceof TextChannel textChannel))
+            return;
+
+        if (textChannel.getParentCategoryIdLong() != Constants.TICKETS_CATEGORY.getLong())
+            return;
+
+        if (event.getAuthor().isBot())
+            return;
+
+        event.getMessage().getMentions().getMembers().forEach(member -> {
+            if (textChannel.canTalk(member))
+                return;
+
+            textChannel.upsertPermissionOverride(member).setAllowed(Permission.VIEW_CHANNEL).queue();
+        });
     }
 
 }

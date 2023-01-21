@@ -2,6 +2,7 @@ package xyz.oribuin.lilori.listener.support;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
@@ -22,6 +23,12 @@ public class GenericSupportListeners extends ListenerAdapter {
         if (channel == null)
             return;
 
+        // give the member role
+        Role role = event.getGuild().getRoleById("731661458680578069");
+        if (role != null)
+            event.getGuild().addRoleToMember(event.getMember(), role).queue();
+
+        // Send embed to the channel
         MessageEmbed embed = new EmbedBuilder()
                 .setAuthor("Member Joined: " + event.getUser().getAsTag())
                 .setDescription("ID: [" + event.getUser().getId() + "] | Mention: " + event.getUser().getAsMention())

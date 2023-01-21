@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     id("java")
     id("application")
-    id("com.github.johnrengelman.shadow") version("7.1.0")
+    id("com.github.johnrengelman.shadow") version ("7.1.0")
 }
 
 group = "xyz.oribuin"
@@ -50,4 +50,5 @@ tasks.withType(ShadowJar::class.java) {
 
 tasks.withType(GradleBuild::class.java) {
     this.dependsOn("shadowJar")
+    this.dependsOn("copy")
 }

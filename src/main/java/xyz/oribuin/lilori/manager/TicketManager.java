@@ -106,7 +106,6 @@ public class TicketManager extends Manager {
             this.bot.getManager(DataManager.class).createArchiveLog(archive.getName(), integer -> {
 
                 this.ticketFiles.put(integer, archive);
-
                 event.reply("We have archived your ticket and will be closing it shortly. Press the button below within 30 seconds to get a copy of the archive.")
                         .addActionRow(Button.success("request-archive:" + integer, "Request Archive").withEmoji(Emoji.fromUnicode("📦")))
                         .queue(hook -> textChannel.delete().queueAfter(30, TimeUnit.SECONDS));
@@ -341,6 +340,10 @@ public class TicketManager extends Manager {
         newText = newText.replaceAll("`(.*?)```", "<span style=\"background-color: #2f3136; padding: 5px;\">$1</span>");
 
         return newText;
+    }
+
+    public Map<Integer, File> getTicketFiles() {
+        return ticketFiles;
     }
 
 }

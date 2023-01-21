@@ -1,15 +1,18 @@
 package xyz.oribuin.lilori.command;
 
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
-import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.oribuin.lilori.LilOri;
 import xyz.oribuin.lilori.handler.Category;
 import xyz.oribuin.lilori.handler.OptionBuilder;
 import xyz.oribuin.lilori.handler.type.SlashCommand;
+import xyz.oribuin.lilori.manager.DataManager;
 import xyz.oribuin.lilori.manager.TicketManager;
+import xyz.oribuin.lilori.util.Constants;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -18,15 +21,39 @@ import java.util.concurrent.TimeUnit;
 
 public class ArchiveCommand extends SlashCommand {
 
+    private final LilOri bot = LilOri.getInstance();
+
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        File file = LilOri.getInstance().getManager(TicketManager.class)
+
+        if (event.getGuild() == null)
+            return;
+
+        if (!event.getGuild().getId().equals(Constants.SUPPORT_SERVER.getValue())) {
+            event.reply("❌ This command can only be used in the support server.").setEphemeral(true).queue();
+            return;
+        }
+
+        if (!(event.getChannel() instanceof TextChannel textChannel)) {
+            event.reply("❌ This command can only be used in a text channel.").setEphemeral(true).queue();
+            return;
+        }
+
+        if (textChannel.getParentCategoryIdLong() != Constants.TICKETS_CATEGORY.getLong()) {
+            event.reply("❌ This command can only be used in a ticket channel.").setEphemeral(true).queue();
+            return;
+        }
+
+        File archive = LilOri.getInstance().getManager(TicketManager.class)
                 .createFileArchive(event.getChannel().asTextChannel());
 
-        ReplyCallbackAction action = event.reply("Here is the archive of this channel.")
-                .addFiles(FileUpload.fromData(file));
+        this.bot.getManager(DataManager.class).createArchiveLog(archive.getName(), integer -> {
+            this.bot.getManager(TicketManager.class).getTicketFiles().put(integer, archive);
 
-        action.queue(interactionHook -> interactionHook.deleteOriginal().queueAfter(30, TimeUnit.SECONDS));
+            event.reply("We have archived your ticket and will be closing it shortly. Press the button below within 30 seconds to get a copy of the archive.")
+                    .addActionRow(Button.success("request-archive:" + integer, "Request Archive").withEmoji(Emoji.fromUnicode("📦")))
+                    .queue(hook -> textChannel.delete().queueAfter(30, TimeUnit.SECONDS));
+        });
     }
 
     @NotNull

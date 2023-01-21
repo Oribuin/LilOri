@@ -34,7 +34,7 @@ public class CommandManager extends Manager {
         this.commands.clear();
 
         // Register all commands
-//        this.commands.put("archive", new ArchiveCommand());
+        this.commands.put("archive", new ArchiveCommand());
 //        this.commands.put("ticketmessage", new TicketMessageCommand());
 
 
